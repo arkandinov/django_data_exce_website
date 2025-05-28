@@ -20,9 +20,6 @@ from dataexcel import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.home, name='home'),
-    path('process-data/', views.process_data, name='process_data'),
-    # path('get-unique-values/', views.get_unique_values, name='get_unique_values'),
-    # path('filter-data/', views.filter_data, name='filter_data'),
-    # path("get-filter-options/", views.get_filter_options, name="get_filter_options"),
+    path('', views.data_filter, name='data_filter'),
+
 ]
