@@ -207,7 +207,7 @@ $(document).ready(function () {
       checkboxList.append(`
         <div class="form-check mt-2">
           <label>
-            <input type="checkbox" class="form-check-input" style="cursor:pointer;" value="${val}" ${checked}> ${displayText}
+            <input type="checkbox" class="form-check-input" value="${val}" ${checked}> ${displayText}
           </label>
         </div>
       `);
