@@ -7,13 +7,9 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 import json
 
-def format_rupiah(angka):
-    try:
-        return f"{angka:,.0f}"
-    except: 
-        return angka
 
-def get_data_from_sqlserver():
+
+def get_data_table_1():
     with connection.cursor() as cursor:
         # Ganti dengan query sesuai database kamu
         cursor.execute(
@@ -32,126 +28,121 @@ def get_data_from_sqlserver():
     data = []
     hide_columns = set()
 
-    nominal_columns = ['Total_Tagihan', 'Total_Pelunasan', 'Sisa_Tagihan']
-    nominal_flags = {col: True for col in nominal_columns}  # asumsikan semua nol dulu
-
     for row in rows:
         row_dict = dict(zip(columns, row))
-
         for key, value in row_dict.items():
             if value is None:
                 row_dict[key] = ''
-            elif isinstance(value, (int, float, Decimal)) and key in nominal_columns:
-                if value != 0:
-                    nominal_flags[key] = False
-                row_dict[key] = format_rupiah(value)
-
         data.append(row_dict)
 
-    # Tentukan kolom nominal yang semua barisnya 0 → disembunyikan
-    for col, is_all_empty in nominal_flags.items():
-        if is_all_empty:
-            hide_columns.add(col)
+    return data
 
-    # Hapus kolom yang ingin disembunyikan
-    for row in data:
-        for col in hide_columns:
-            row.pop(col, None)
+def get_data_table_2():
+    with connection.cursor() as cursor:
+        # Ganti dengan query sesuai database kamu
+        cursor.execute(
+            """
+                SELECT No_Invoice, Nama_Klien, tgl_Invoice, tgl_klien_Terima_Invoice, Total_Tagihan, tgl_Pelunasan, Total_Pelunasan, Sisa_Tagihan, Tgl_Jatuh_Tempo, 
+                tanggal_SPM1 , tanggal_SPM2 FROM View_WIBI_Tagihan_Belum_Lunas_Accurate_tanpa_TOP WHERE (tanggal_SOMASI > { fn NOW() }) AND (tanggal_SPM2 <= { fn NOW() }) ORDER BY tanggal_SPM2
+            """
+        )
+        columns = [col[0] for col in cursor.description]
+        rows = cursor.fetchall()
+
+    data = []
+    hide_columns = set()
+
+    for row in rows:
+        row_dict = dict(zip(columns, row))
+        for key, value in row_dict.items():
+            if value is None:
+                row_dict[key] = ''
+        data.append(row_dict)
+
+    return data
+
+def get_data_table_3():
+    with connection.cursor() as cursor:
+        # Ganti dengan query sesuai database kamu
+        cursor.execute(
+            """
+SELECT No_Invoice, Nama_Klien, tgl_Invoice, tgl_klien_Terima_Invoice, Total_Tagihan, tgl_Pelunasan, Total_Pelunasan, Sisa_Tagihan, Tgl_Jatuh_Tempo, 
+tanggal_SPM1 , tanggal_SPM2, tanggal_SOMASI FROM View_WIBI_Tagihan_Belum_Lunas_Accurate_tanpa_TOP WHERE  (tanggal_SOMASI <= { fn NOW() }) ORDER BY tanggal_SOMASI
+            """
+        )
+        columns = [col[0] for col in cursor.description]
+        rows = cursor.fetchall()
+
+    data = []
+    hide_columns = set()
+
+    for row in rows:
+        row_dict = dict(zip(columns, row))
+        for key, value in row_dict.items():
+            if value is None:
+                row_dict[key] = ''
+        data.append(row_dict)
 
     return data
 
 def data_filter(request):
     # Ambil data dari SQL Server
-    data = get_data_from_sqlserver()
+    data_spm1 = get_data_table_1()
+    data_spm2 = get_data_table_2()
+    data_somasi = get_data_table_3()
 
-    filter_columns = ['No_Invoice', 'Nama_Klien', 'tgl_Invoice', 'tgl_klien_Terima_Invoice', 'Total_Tagihan', 'tgl_Pelunasan', 'Total_Pelunasan', 'Sisa_Tagihan', 'Tgl_Jatuh_Tempo', 'tanggal_SPM1']
+    filter_columns = ['No_Invoice', 'Nama_Klien', 'tgl_Invoice', 'tgl_klien_Terima_Invoice', 'Total_Tagihan', 'tgl_Pelunasan', 'Total_Pelunasan', 'Sisa_Tagihan', 'Tgl_Jatuh_Tempo', 'tanggal_SPM1', 'tanggal_SPM2', 'tanggal_SOMASI']
     filters = {}    
     for kolom in filter_columns:
         values = request.GET.getlist(kolom)
         if values:
             filters[kolom] = values
     # Default data kosong kalau tidak ada filter dan bukan AJAX
-    data_filtered = []
+    data_filtered1 = []
+    data_filtered2 = []
+    data_filtered3 = []
 
     # Kalau AJAX dan ada filter atau tombol process data (misal ada param process=1)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         if filters:
-            data_filtered = data
+            data_filtered1 = data_spm1
+            data_filtered2 = data_spm2
+            data_filtered3 = data_somasi
             for kolom, values in filters.items():
-                data_filtered = [d for d in data_filtered if d.get(kolom) in values]
+                data_filtered1 = [d for d in data_filtered1 if d.get(kolom) in values]
+                data_filtered2 = [d for d in data_filtered2 if d.get(kolom) in values]
+                data_filtered3 = [d for d in data_filtered3 if d.get(kolom) in values]
         elif request.GET.get('process') == '1':
             # Load semua data kalau ada param process=1 (tombol Process Data)
-            data_filtered = data
+            data_filtered1 = data_spm1
+            data_filtered2 = data_spm2
+            data_filtered3 = data_somasi
 
         # Opsi dropdown tetap disiapkan untuk filter
         opsi_dropdown = {}
         for kolom in filter_columns:
             filters_except_current = {k: v for k, v in filters.items() if k != kolom}
-            data_temp = data
+            data_temp = data_spm1 + data_spm2 + data_somasi
             for k, v in filters_except_current.items():
                 data_temp = [d for d in data_temp if d.get(k) in v]
             opsi_dropdown[kolom] = sorted(set(d.get(kolom) for d in data_temp if kolom in d))
 
         return JsonResponse({
-            'data': data_filtered,
+            'data_spm1': data_filtered1,
+            'data_spm2': data_filtered2,
+            'data_somasi': data_filtered3,
             'opsi_dropdown': opsi_dropdown,
         })
 
 
     # Render template dengan data kosong saat load page pertama
     context = {
-        'data': data_filtered,
+        'data_spm1': data_filtered1,
+        'data_spm2': data_filtered2,
+        'data_somasi': data_filtered3,
         'opsi_dropdown': {},  # bisa kosong atau sesuai kebutuhan
         'selected_filters': filters,
     }
-    return render(request, 'filter.html', context)
+    return render(request, 'BASE.html', context)
     
-# def home(request):
-#     return render(request, 'index.html')
-
-# @csrf_exempt
-# def process_data(request):
-#     if request.method == 'GET':
-#         data = []
-#         hide_columns = set()
-
-#         with connection.cursor() as cursor:
-#             query = """
-#                 SELECT No_Invoice, Nama_Klien, tgl_Invoice, tgl_klien_Terima_Invoice,
-#                        Total_Tagihan, tgl_Pelunasan, Total_Pelunasan, Sisa_Tagihan,
-#                        Tgl_Jatuh_Tempo, tanggal_SPM1
-#                 FROM View_WIBI_Tagihan_Belum_Lunas_Accurate_tanpa_TOP
-#                 WHERE (tanggal_SPM1 <= { fn NOW() }) AND (tanggal_SPM2 > { fn NOW() })
-#                 ORDER BY tanggal_SPM1
-#             """
-#             cursor.execute(query)
-#             columns = [col[0] for col in cursor.description]
-#             rows = cursor.fetchall()
-
-#             nominal_columns = ['Total_Tagihan', 'Total_Pelunasan', 'Sisa_Tagihan']
-#             nominal_flags = {col: True for col in nominal_columns}
-
-#             for row in rows:
-#                 row_dict = dict(zip(columns, row))
-
-#                 for key, value in row_dict.items():
-#                     if value is None:
-#                         row_dict[key] = ''
-#                     elif isinstance(value, (int, float, Decimal)) and key in nominal_columns:
-#                         if value != 0:
-#                             nominal_flags[key] = False
-#                         row_dict[key] = format_rupiah(value)
-#                     elif 'tgl' in key.lower() or 'tanggal' in key.lower():
-#                         row_dict[key] = date_format(value, "d-m-Y")
-
-#                 data.append(row_dict)
-
-#             for col, is_all_empty in nominal_flags.items():
-#                 if is_all_empty:
-#                     hide_columns.add(col)
-
-#             for row in data:
-#                 for col in hide_columns:
-#                     row.pop(col, None)
-#         return JsonResponse(data, safe=False)
 
