@@ -2,6 +2,8 @@ body,
 .tabledata_wrapper {
   margin: 0;
   padding: 20px;
+   font-family: "Inter", sans-serif;
+
 }
 
 .tabledata {
@@ -40,12 +42,57 @@ body,
   border-radius: 8px;
 }
 
-/* span {
-  font-size: 11px;
-} */
+span {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+}
 
 .check {
   margin-bottom: 10px;
   gap: 10px;
   cursor: pointer;
 }
+
+#table_SPM1 td:nth-child(2),
+#table_SPM2 td:nth-child(2),
+#table_SOMASI td:nth-child(2) {
+  font-size: 12px;
+}
+
+#table_SPM1 td,
+#table_SPM2 td,
+#table_SOMASI td {
+  font-size: 14px;
+}
+
+
+.dataTables_wrapper .dataTables_processing {
+    /* Posisi Fixed */
+    position: fixed; /* Membuat elemen tetap di layar saat scrolling */
+    top: 50%;        /* Posisi vertikal di tengah */
+    left: 58%;       /* Posisi horizontal di tengah */
+    
+    /* Menggeser elemen agar benar-benar di tengah berdasarkan ukurannya sendiri */
+    transform: translate(-50%, -50%);
+    
+    /* Styling Visual (sesuaikan dengan preferensi Anda) */
+    padding: 15px 30px;
+    color: white;
+    border-radius: 8px;
+    z-index: 1050; 
+    border: none;
+}
+
+.dataTables_scrollHead th.filter-active {
+    background-color: #d1e7dd !important; /* Warna hijau muda seperti 'alert-success' Bootstrap */
+    color: #0f5132 !important; /* Warna teks yang lebih gelap agar kontras */
+}
+
+/* * Menambahkan sedikit transisi untuk perubahan warna yang lebih halus (opsional).
+ */
+.dataTables_scrollHead th {
+    transition: background-color 0.3s ease-in-out;
+}
+
+

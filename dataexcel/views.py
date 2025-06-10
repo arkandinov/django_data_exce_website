@@ -1,17 +1,13 @@
-from django.db import connection
-from decimal import Decimal
-from django.shortcuts import render
-from django.utils.dateformat import format as date_format
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from django.utils.dateparse import parse_date
-import json
+from django.shortcuts import render
+from django.db import connection
+import datetime
+import decimal
+import math
 
-
-
+# Pastikan fungsi-fungsi ini mengembalikan semua nilai sebagai string bersih
 def get_data_table_1():
     with connection.cursor() as cursor:
-        # Ganti dengan query sesuai database kamu
         cursor.execute(
             """
                 SELECT No_Invoice, Nama_Klien, tgl_Invoice, tgl_klien_Terima_Invoice,
@@ -24,125 +20,174 @@ def get_data_table_1():
         )
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
-
     data = []
-    hide_columns = set()
-
-    for row in rows:
-        row_dict = dict(zip(columns, row))
-        for key, value in row_dict.items():
-            if value is None:
-                row_dict[key] = ''
+    for row_values in rows:
+        row_dict = {}
+        for i, col_name in enumerate(columns):
+            val = row_values[i]
+            if isinstance(val, datetime.datetime):
+                row_dict[col_name] = val.strftime('%Y-%m-%d %H:%M:%S')
+            elif isinstance(val, decimal.Decimal):
+                row_dict[col_name] = str(val)
+            elif val is None:
+                row_dict[col_name] = ''
+            else:
+                row_dict[col_name] = str(val).strip()
         data.append(row_dict)
-
     return data
 
 def get_data_table_2():
     with connection.cursor() as cursor:
-        # Ganti dengan query sesuai database kamu
         cursor.execute(
             """
-                SELECT No_Invoice, Nama_Klien, tgl_Invoice, tgl_klien_Terima_Invoice, Total_Tagihan, tgl_Pelunasan, Total_Pelunasan, Sisa_Tagihan, Tgl_Jatuh_Tempo, 
-                tanggal_SPM1 , tanggal_SPM2 FROM View_WIBI_Tagihan_Belum_Lunas_Accurate_tanpa_TOP WHERE (tanggal_SOMASI > { fn NOW() }) AND (tanggal_SPM2 <= { fn NOW() }) ORDER BY tanggal_SPM2
+                SELECT No_Invoice, Nama_Klien, tgl_Invoice, tgl_klien_Terima_Invoice, Total_Tagihan, 
+                       tgl_Pelunasan, Total_Pelunasan, Sisa_Tagihan, Tgl_Jatuh_Tempo, 
+                       tanggal_SPM1, tanggal_SPM2 
+                FROM View_WIBI_Tagihan_Belum_Lunas_Accurate_tanpa_TOP 
+                WHERE (tanggal_SOMASI > { fn NOW() }) AND (tanggal_SPM2 <= { fn NOW() }) 
+                ORDER BY tanggal_SPM2
             """
         )
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
-
     data = []
-    hide_columns = set()
-
-    for row in rows:
-        row_dict = dict(zip(columns, row))
-        for key, value in row_dict.items():
-            if value is None:
-                row_dict[key] = ''
+    for row_values in rows:
+        row_dict = {}
+        for i, col_name in enumerate(columns):
+            val = row_values[i]
+            if isinstance(val, datetime.datetime):
+                row_dict[col_name] = val.strftime('%Y-%m-%d %H:%M:%S')
+            elif isinstance(val, decimal.Decimal):
+                row_dict[col_name] = str(val)
+            elif val is None:
+                row_dict[col_name] = ''
+            else:
+                row_dict[col_name] = str(val).strip()
         data.append(row_dict)
-
     return data
 
 def get_data_table_3():
     with connection.cursor() as cursor:
-        # Ganti dengan query sesuai database kamu
         cursor.execute(
             """
-SELECT No_Invoice, Nama_Klien, tgl_Invoice, tgl_klien_Terima_Invoice, Total_Tagihan, tgl_Pelunasan, Total_Pelunasan, Sisa_Tagihan, Tgl_Jatuh_Tempo, 
-tanggal_SPM1 , tanggal_SPM2, tanggal_SOMASI FROM View_WIBI_Tagihan_Belum_Lunas_Accurate_tanpa_TOP WHERE  (tanggal_SOMASI <= { fn NOW() }) ORDER BY tanggal_SOMASI
+                SELECT No_Invoice, Nama_Klien, tgl_Invoice, tgl_klien_Terima_Invoice, Total_Tagihan, 
+                       tgl_Pelunasan, Total_Pelunasan, Sisa_Tagihan, Tgl_Jatuh_Tempo, 
+                       tanggal_SPM1, tanggal_SPM2, tanggal_SOMASI 
+                FROM View_WIBI_Tagihan_Belum_Lunas_Accurate_tanpa_TOP 
+                WHERE (tanggal_SOMASI <= { fn NOW() }) 
+                ORDER BY tanggal_SOMASI
             """
         )
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
-
     data = []
-    hide_columns = set()
-
-    for row in rows:
-        row_dict = dict(zip(columns, row))
-        for key, value in row_dict.items():
-            if value is None:
-                row_dict[key] = ''
+    for row_values in rows:
+        row_dict = {}
+        for i, col_name in enumerate(columns):
+            val = row_values[i]
+            if isinstance(val, datetime.datetime):
+                row_dict[col_name] = val.strftime('%Y-%m-%d %H:%M:%S')
+            elif isinstance(val, decimal.Decimal):
+                row_dict[col_name] = str(val)
+            elif val is None:
+                row_dict[col_name] = ''
+            else:
+                row_dict[col_name] = str(val).strip()
         data.append(row_dict)
-
     return data
 
+
 def data_filter(request):
-    # Ambil data dari SQL Server
-    data_spm1 = get_data_table_1()
-    data_spm2 = get_data_table_2()
-    data_somasi = get_data_table_3()
-
-    filter_columns = ['No_Invoice', 'Nama_Klien', 'tgl_Invoice', 'tgl_klien_Terima_Invoice', 'Total_Tagihan', 'tgl_Pelunasan', 'Total_Pelunasan', 'Sisa_Tagihan', 'Tgl_Jatuh_Tempo', 'tanggal_SPM1', 'tanggal_SPM2', 'tanggal_SOMASI']
-    filters = {}    
-    for kolom in filter_columns:
-        values = request.GET.getlist(kolom)
-        if values:
-            filters[kolom] = values
-    # Default data kosong kalau tidak ada filter dan bukan AJAX
-    data_filtered1 = []
-    data_filtered2 = []
-    data_filtered3 = []
-
-    # Kalau AJAX dan ada filter atau tombol process data (misal ada param process=1)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        if filters:
-            data_filtered1 = data_spm1
-            data_filtered2 = data_spm2
-            data_filtered3 = data_somasi
-            for kolom, values in filters.items():
-                data_filtered1 = [d for d in data_filtered1 if d.get(kolom) in values]
-                data_filtered2 = [d for d in data_filtered2 if d.get(kolom) in values]
-                data_filtered3 = [d for d in data_filtered3 if d.get(kolom) in values]
-        elif request.GET.get('process') == '1':
-            # Load semua data kalau ada param process=1 (tombol Process Data)
-            data_filtered1 = data_spm1
-            data_filtered2 = data_spm2
-            data_filtered3 = data_somasi
+        draw = int(request.GET.get('draw', 0))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        if length == -1: 
+            length = 1000000 
+            
+        order_column_index_str = request.GET.get('order[0][column]')
+        order_dir = request.GET.get('order[0][dir]', 'asc')
+        table_key = request.GET.get('table_key', '').upper()
 
-        # Opsi dropdown tetap disiapkan untuk filter
+        table_column_configs = {
+            'SPM1': ['No_Invoice', 'Nama_Klien', 'tgl_Invoice', 'tgl_klien_Terima_Invoice', 'Total_Tagihan', 'tgl_Pelunasan', 'Total_Pelunasan', 'Sisa_Tagihan', 'Tgl_Jatuh_Tempo', 'tanggal_SPM1'],
+            'SPM2': ['No_Invoice', 'Nama_Klien', 'tgl_Invoice', 'tgl_klien_Terima_Invoice', 'Total_Tagihan', 'tgl_Pelunasan', 'Total_Pelunasan', 'Sisa_Tagihan', 'Tgl_Jatuh_Tempo', 'tanggal_SPM1', 'tanggal_SPM2'],
+            'SOMASI': ['No_Invoice', 'Nama_Klien', 'tgl_Invoice', 'tgl_klien_Terima_Invoice', 'Total_Tagihan', 'tgl_Pelunasan', 'Total_Pelunasan', 'Sisa_Tagihan', 'Tgl_Jatuh_Tempo', 'tanggal_SPM1', 'tanggal_SPM2', 'tanggal_SOMASI']
+        }
+        if not table_key or table_key not in table_column_configs:
+            return JsonResponse({'error': 'table_key tidak valid.'}, status=400)
+
+        current_table_cols = table_column_configs[table_key]
+        raw_data = []
+        if table_key == 'SPM1': raw_data = get_data_table_1()
+        elif table_key == 'SPM2': raw_data = get_data_table_2()
+        elif table_key == 'SOMASI': raw_data = get_data_table_3()
+        
+        records_total = len(raw_data)
+        data_after_filters = list(raw_data) 
+
+        # 2. Sanitasi & Terapkan Filter
+        sanitized_raw_data = [{k: v for k, v in row.items()} for row in raw_data]
+        data_after_filters = list(sanitized_raw_data)
+        
+        active_popup_filters = {}
+        # Use current_table_cols instead of undefined canonical_cols
+        for col_name in current_table_cols:
+            filter_values = request.GET.getlist(col_name) or request.GET.getlist(col_name + '[]')
+            if filter_values:
+                cleaned_values = [val.strip().lower() for val in filter_values if val.strip()]
+                if cleaned_values: active_popup_filters[col_name] = cleaned_values
+        
+        if active_popup_filters:
+            for col_name, stripped_vals in active_popup_filters.items():
+                if stripped_vals:
+                    data_after_filters = [row for row in data_after_filters if str(row.get(col_name, '')).lower() in stripped_vals]
+        
+        records_total = len(sanitized_raw_data)
+        records_filtered = len(data_after_filters)
+
+        if length > 0 and records_filtered > 0 : 
+            if start >= records_filtered:
+                start = math.floor((records_filtered - 1) / length) * length
+            if start < 0:
+                start = 0
+        elif records_filtered == 0: 
+             start = 0 
+        
+        data_for_current_page = data_after_filters[start : start + length]
+        paginated_data = list(data_for_current_page) 
+
+        if order_column_index_str is not None:
+            try:
+                order_column_index = int(order_column_index_str)
+                if 0 <= order_column_index < len(current_table_cols):
+                    column_to_sort = current_table_cols[order_column_index]
+                    def sort_key_func(item):
+                        val_str = item.get(column_to_sort, '') 
+                        if column_to_sort in ['Total_Tagihan', 'Total_Pelunasan', 'Sisa_Tagihan']:
+                            try: return float(val_str) if val_str else float('-inf')
+                            except ValueError: return float('-inf') 
+                        return val_str.lower() 
+                    paginated_data.sort(key=sort_key_func, reverse=(order_dir == 'desc'))
+            except ValueError: pass
+
         opsi_dropdown = {}
-        for kolom in filter_columns:
-            filters_except_current = {k: v for k, v in filters.items() if k != kolom}
-            data_temp = data_spm1 + data_spm2 + data_somasi
-            for k, v in filters_except_current.items():
-                data_temp = [d for d in data_temp if d.get(k) in v]
-            opsi_dropdown[kolom] = sorted(set(d.get(kolom) for d in data_temp if kolom in d))
-
+        if sanitized_raw_data:
+            for col_name in current_table_cols:
+                data_untuk_opsi = list(sanitized_raw_data)
+                for f_col, f_vals in active_popup_filters.items():
+                    if f_col != col_name:
+                        data_untuk_opsi = [row for row in data_untuk_opsi if str(row.get(f_col, '')).lower() in f_vals]
+                unique_values = sorted(list(set(str(row.get(col_name, '')) for row in data_untuk_opsi if str(row.get(col_name, '')).strip() != '')))
+                opsi_dropdown[col_name] = unique_values
+            
         return JsonResponse({
-            'data_spm1': data_filtered1,
-            'data_spm2': data_filtered2,
-            'data_somasi': data_filtered3,
+            'draw': draw, 
+            'recordsTotal': records_total,
+            'recordsFiltered': records_filtered,
+            'data': paginated_data,
             'opsi_dropdown': opsi_dropdown,
         })
 
-
-    # Render template dengan data kosong saat load page pertama
-    context = {
-        'data_spm1': data_filtered1,
-        'data_spm2': data_filtered2,
-        'data_somasi': data_filtered3,
-        'opsi_dropdown': {},  # bisa kosong atau sesuai kebutuhan
-        'selected_filters': filters,
-    }
+    context = {}
     return render(request, 'BASE.html', context)
-    
-
