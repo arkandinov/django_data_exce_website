@@ -55,7 +55,7 @@ git clone [URL-repository-anda.git]
 cd [nama-folder-repo]
 ```
 
-## Buat dan Aktifkan Virtual Environment
+### 2. Buat dan Aktifkan Virtual Environment
 ```bash
 # Membuat virtual environment
 python -m venv venv
@@ -67,13 +67,13 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-## Instal Semua Dependensi
+### 3. Instal Semua Dependensi
 Perintah ini akan menginstal semua paket yang terdaftar di requirements.txt ke dalam venv Anda.
 ```bash
 pip install -r requirements.txt
 ```
 
-## Konfigurasi Environment (.env)
+### 4. Konfigurasi Environment (.env)
 Ini adalah langkah paling penting untuk koneksi database dan keamanan.
 ```bash
 # Django Core
@@ -89,7 +89,7 @@ DB_HOST='AlamatIPAtauNamaServerSQL'
 DB_PORT='1433'
 DB_DRIVER='ODBC Driver 17 for SQL Server'
 ```
-## Konfigurasi settings.py
+### 5. Konfigurasi settings.py
 Pastikan file settings.py Anda membaca variabel dari file .env.
 Tambahkan kode ini di bagian paling atas file settings.py:
 ```bash
@@ -98,7 +98,7 @@ from dotenv import load_dotenv
 load_dotenv()
 ```
 
-## Cara Menjalankan Aplikasi
+### 6. Cara Menjalankan Aplikasi
 Gunakan Waitress untuk menjalankan server. Pastikan venv Anda aktif.
 ```bash
 # Ganti 'namaproyek' dengan nama folder konfigurasi Django Anda
