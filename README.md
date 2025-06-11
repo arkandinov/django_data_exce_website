@@ -1,7 +1,3 @@
-## Command menjalankan projeknya 
-```bash
-python .\run_waitress.py   
-```
 # [Aplikasi Manajemen Tagihan Keuangan]
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
