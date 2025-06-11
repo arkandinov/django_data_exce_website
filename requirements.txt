@@ -1,0 +1,5 @@
+django
+waitress
+python-dotenv
+mssql-django
+whitenoise
