@@ -47,7 +47,7 @@ Berikut adalah cara untuk menjalankan proyek ini di lingkungan lokal dari awal.
 
 #### 1. Clone Repository
 ```bash
-git clone [URL-repository-anda.git]
+git clone https://github.com/arkandinov/django_data_exce_website.git
 cd [nama-folder-repo]
 ```
 
