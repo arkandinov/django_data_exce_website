@@ -85,15 +85,18 @@ DB_HOST='AlamatIPAtauNamaServerSQL'
 DB_PORT='1433'
 DB_DRIVER='ODBC Driver 17 for SQL Server'
 ```
-### 5. Konfigurasi settings.py
-Pastikan file settings.py Anda membaca variabel dari file .env.
-Tambahkan kode ini di bagian paling atas file settings.py:
+### 5. Tambahkan ip anda di settings.py dan run_waitress.py
+Pastikan file settings.py Anda terdapat ip anda.
+Cari kode ini di bagian atas file settings.py:
 ```bash
-import os
-from dotenv import load_dotenv
-load_dotenv()
+ALLOWED_HOSTS = ['ganti_dengan_ip_anda','localhost','127.0.0.1']
 ```
-
+Pastikan file run_waitress.py Anda terdapat ip anda.
+Cari kode ini di run_waitress.py:
+```bash
+if __name__ == '__main__':
+    serve(application, host='ganti_dengan_ip_anda', port=5050)
+```
 ### 6. Cara Menjalankan Aplikasi
 Gunakan Waitress untuk menjalankan server. Pastikan venv Anda aktif.
 ```bash
