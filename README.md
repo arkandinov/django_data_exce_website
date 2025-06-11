@@ -10,9 +10,6 @@ python .\run_waitress.py
 
 Aplikasi web berbasis Django yang dirancang untuk menampilkan, memfilter, dan mengelola data tagihan secara efisien. Proyek ini dibangun dengan arsitektur Server-Side Processing untuk menangani data dalam jumlah besar dengan cepat, dan disajikan menggunakan web server Waitress yang siap untuk produksi dengan database Microsoft SQL Server.
 
-![Contoh Screenshot Aplikasi]([ganti_dengan_link_screenshot_aplikasi_anda.png])
----
-
 ## Fitur Utama
 
 -   **Tabel Data Interaktif:** Menampilkan data menggunakan jQuery DataTables yang responsif.
