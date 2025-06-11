@@ -101,5 +101,5 @@ if __name__ == '__main__':
 Gunakan Waitress untuk menjalankan server. Pastikan venv Anda aktif.
 ```bash
 # Ganti 'namaproyek' dengan nama folder konfigurasi Django Anda
-waitress-serve --host=127.0.0.1 --port=8000 namaproyek.wsgi:application
+waitress-serve --host=127.0.0.1 --port=8000 dataexcelwebsite.wsgi:application
 ```
